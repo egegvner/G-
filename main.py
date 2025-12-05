@@ -82,13 +82,15 @@ st.markdown(
 if "current_level" not in st.session_state:
     st.session_state.current_level = 1
 if "lives" not in st.session_state:
-    st.session_state.lives = 5
+    st.session_state.lives = 7
 if "game_over" not in st.session_state:
     st.session_state.game_over = False
 if "completed_levels" not in st.session_state:
     st.session_state.completed_levels = []
 if "user_answer" not in st.session_state:
     st.session_state.user_answer = ""
+if "hint_shown" not in st.session_state:
+    st.session_state.hint_shown = {}
 
 LEVEL_ANSWERS = {
     1: {"type": "range", "range": (7.0, 7.3)},
@@ -101,10 +103,10 @@ LEVEL_ANSWERS = {
 
 LEVEL_DESCRIPTIONS = {
     1: "Measure the velocity of the ball falling down the slope",
-    2: "Identify the pigment that gives leaves their color",
-    3: "Count the number of samples used in the lab",
+    2: "Look more closely at the tiles. What is code?",
+    3: "Correclty complete the pH test.",
     4: "Identify the number for each letter in the 'caution' sign ",
-    5: "Type the final mission codeword",
+    5: "Assemble the logic circuit and complete the truth table. X is the denary value of the output.",
     6: "Type the final mission codeword"
 }
 
@@ -117,6 +119,14 @@ LEVEL_TITLES = {
     6: "FINAL"
 }
 
+LEVEL_NUMBERS_MEMORISE = {
+    1: "4",
+    2: "8",
+    3: "1",
+    4: "3",
+    5: "486"
+
+}
 def check_answer(level, answer):
     config = LEVEL_ANSWERS.get(level)
     if not config:
@@ -160,24 +170,24 @@ def check_answer(level, answer):
 
 def reset_game():
     st.session_state.current_level = 1
-    st.session_state.lives = 5
+    st.session_state.lives = 7
     st.session_state.game_over = False
     st.session_state.completed_levels = []
     st.session_state.user_answer = ""
-    st.session_state.flash_red = False
+    st.session_state.hint_shown = {}
 
 if st.session_state.game_over or st.session_state.lives <= 0:
     st.title("Game Over")
     st.markdown("---")
     st.markdown(f"### You ran out of lives!")
-    st.markdown(f"**Levels completed:** {len(st.session_state.completed_levels)}/5")
+    st.markdown(f"**Levels completed:** {len(st.session_state.completed_levels)}/6")
     
     if st.button("Restart Game", use_container_width=True):
         reset_game()
         st.rerun()
     st.stop()
 
-if st.session_state.current_level > 5:
+if st.session_state.current_level > 6:
     st.title("🎉 Victory!")
     st.markdown("---")
     st.markdown("### Congratulations! You completed all levels!")
@@ -192,14 +202,30 @@ current_level = st.session_state.current_level
 
 col1, col2 = st.columns(2)
 with col1:
-    st.metric("Level", f"{current_level}/5")
+    st.metric("Level", f"{current_level}/6")
 with col2:
     st.metric("Lives", st.session_state.lives)
 
 st.markdown("---")
 
 st.markdown(f"# Level {current_level} - <u>{LEVEL_TITLES[current_level]}</u>", unsafe_allow_html=True)
-st.markdown(f"###### <u>HINT</u>: {LEVEL_DESCRIPTIONS[current_level]}", unsafe_allow_html=True)
+
+hint_shown_for_level = st.session_state.hint_shown.get(current_level, False)
+
+if not hint_shown_for_level:
+    hint_button_disabled = st.session_state.lives <= 0
+    if st.button("Get Hint", use_container_width=True, type="secondary", disabled=hint_button_disabled):
+        if st.session_state.lives > 0:
+            st.session_state.lives -= 1
+            st.session_state.hint_shown[current_level] = True
+            if st.session_state.lives <= 0:
+                st.session_state.game_over = True
+            st.rerun()
+    if hint_button_disabled:
+        st.caption("⚠️ No lives remaining - cannot get hint")
+else:
+    st.markdown(f"###### <u>HINT</u>: {LEVEL_DESCRIPTIONS[current_level]}", unsafe_allow_html=True)
+
 st.text("")
 
 user_answer = st.text_input(
@@ -220,7 +246,7 @@ if submit_button:
         if feedback:
             st.warning(feedback)
         elif is_correct:
-           
+            st.toast(f"TASK: MEMORISE NUMBER: '{LEVEL_NUMBERS_MEMORISE[current_level]}'", icon="💡")
             st.success("✓ Correct! Moving to next level...")
             time.sleep(3)
             st.session_state.completed_levels.append(current_level)
