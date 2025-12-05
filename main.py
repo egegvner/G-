@@ -93,7 +93,7 @@ if "hint_shown" not in st.session_state:
     st.session_state.hint_shown = {}
 
 LEVEL_ANSWERS = {
-    1: {"type": "range", "range": (7.0, 7.3)},
+    1: {"type": "range", "range": (1.8, 2.1)},
     2: {"type": "text", "value": "11221"},
     3: {"type": "text", "value": "1.2x+2.2"},
     4: {"type": "integer", "value": "20922287"},
